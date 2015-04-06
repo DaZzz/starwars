@@ -1,0 +1,6 @@
+#!/bin/bash
+prog=starwars
+rm $prog
+link="-lopencv_core -lopencv_highgui -lopencv_imgproc"
+g++ -O2 $includes $prog.cpp $link -o $prog
+./$prog
