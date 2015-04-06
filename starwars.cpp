@@ -4,6 +4,7 @@
 #include <iostream>
 #include <list>
 #include <cstdio>
+#include <vector>
 
 using namespace cv;
 using namespace std;
@@ -159,6 +160,59 @@ void on_mouse(int event, int x, int y, int flags, void* userdata)
   }
 }
 
+
+/**
+ * Обработка текущего кадра
+ */
+Mat processFrame(Mat &frame) {
+
+  // Получить бинарное изображение
+  Mat grayscaleMat (frame.size(), CV_8U);
+  cvtColor(frame, grayscaleMat, CV_BGR2GRAY );
+  Mat binaryMat(grayscaleMat.size(), grayscaleMat.type());
+  threshold(grayscaleMat, binaryMat, 10, 255, cv::THRESH_BINARY);
+
+  // Убрать лишнее
+  Mat eroded;
+  Mat dilated;
+  int erosionSize = 10;
+  Mat element = getStructuringElement(MORPH_ELLIPSE,
+                                     Size( 2*erosionSize + 1, 2*erosionSize+1 ),
+                                     Point( erosionSize, erosionSize ) );
+
+  /// Apply the erosion operation
+  erode(binaryMat, eroded, element);
+  dilate(eroded, dilated, element);
+
+  // Получить контуры
+  vector<vector<Point> > contours;
+  vector<Vec4i> hierarchy;
+  findContours( dilated, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+
+  vector<vector<Point> > contoursPoly( contours.size() );
+  vector<Point2f>center( contours.size() );
+  vector<float>radius( contours.size() );
+
+  for (int i = 0; i < contours.size(); ++i) {
+    approxPolyDP( Mat(contours[i]), contoursPoly[i], 3, true );
+    minEnclosingCircle( (Mat)contoursPoly[i], center[i], radius[i] );
+  }
+
+  // Нарисовать области
+  Mat drawing = Mat::zeros( dilated.size(), CV_8UC3 );
+  RNG rng(12345);
+  for( int i = 0; i < contours.size(); i++ )
+  {
+    Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+    // drawContours( drawing, contoursPoly, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
+    if((int)radius[i] > 10) {
+      circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
+    }
+  }
+
+  return drawing;
+}
+
 /**
  * Основная процедура
  */
@@ -171,18 +225,23 @@ int main( int argc, char** argv )
 
   ship.init(shipPic, 320, 240, 0,0, 90, 0.5);
 
-  namedWindow( "Star wars", WINDOW_AUTOSIZE );// Create a window for display.
+  namedWindow( "Star wars", WINDOW_AUTOSIZE ); // Create a window for display.
+  namedWindow( "Processed", WINDOW_AUTOSIZE ); // Create a window for display.
+
   setMouseCallback("Star wars", on_mouse, 0 );
   int fr = 0;
   while (true)
   {
     if (!cap.read(mainFrame)) break;
+    Mat pFrame = processFrame(mainFrame);
+
     ship.move(1.0/24);
     ship.display(mainFrame);
     char text[255];
     sprintf(text, "Score:%d", (int)fr);
     putText (mainFrame, text, Point(500,20), CV_FONT_HERSHEY_SIMPLEX|CV_FONT_ITALIC, 0.7, Scalar(255,255,255), 2);
     imshow("Star wars", mainFrame); //show the frame in "MyVideo" window
+    imshow("Processed", pFrame);
     waitKey(20);
     fr++;
   }
