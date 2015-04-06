@@ -142,9 +142,9 @@ void on_mouse(int event, int x, int y, int flags, void* userdata)
 
 int main( int argc, char** argv )
 {
-  VideoCapture cap("StarWars.avi");
+  VideoCapture cap("resources/StarWars.avi");
   if (!cap.isOpened()) { cout << "Error can't find the file"<<endl; }
-  Mat shipPic = imread("ship.png", -1);
+  Mat shipPic = imread("resources/ship.png", -1);
   Mat mainFrame;
 
   ship.init(shipPic, 320, 240, 0,0, 90, 0.5);
