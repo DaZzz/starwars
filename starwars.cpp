@@ -8,6 +8,18 @@
 using namespace cv;
 using namespace std;
 
+/**
+ * Случайное с точкой
+ */
+double fRand(double fMin, double fMax)
+{
+  double f = (double)rand() / RAND_MAX;
+  return fMin + f * (fMax - fMin);
+}
+
+/**
+ * Поворот картинки
+ */
 void turnPic(Mat& p0, Mat& p, double phi)
 {
   int newSz = (int)sqrt(p0.rows*p0.rows + p0.cols*p0.cols);
@@ -21,6 +33,9 @@ void turnPic(Mat& p0, Mat& p, double phi)
   warpAffine(p1, p, rot_mat, p1.size());
 }
 
+/**
+ * Наложение сверху с прозрачностью
+ */
 void overlayWithTransparancy(Mat &mf, Mat &f)
 {
   for(int i = 0; i < f.rows; i++)
@@ -39,6 +54,9 @@ void overlayWithTransparancy(Mat &mf, Mat &f)
   }
 }
 
+/**
+ * Основная стуктура корабля
+ */
 struct Ship {
   Mat pic, pic0;
   double x,y,vx,vy,phi, scale; //x,y - позиция центра
@@ -85,12 +103,9 @@ struct Ship {
   }
 } ship;
 
-double fRand(double fMin, double fMax)
-{
-    double f = (double)rand() / RAND_MAX;
-    return fMin + f * (fMax - fMin);
-}
-
+/**
+ * Получить тип изображения
+ */
 string getImgType(Mat& im)
 {
   int enum_ints[] =       {CV_8U,  CV_8UC1,  CV_8UC2,  CV_8UC3,  CV_8UC4,
@@ -115,8 +130,9 @@ string getImgType(Mat& im)
   return "unknown image type";
 }
 
-double fRand(double fMax) {return fRand(0,fMax);}
-
+/**
+ * Задать прозрачность
+ */
 void setTransparancyTo(Mat& frame, uchar v)
 {
   Mat channel[4];
@@ -125,6 +141,9 @@ void setTransparancyTo(Mat& frame, uchar v)
   merge(channel,4,frame);
 }
 
+/**
+ * Обработка позиции мыши
+ */
 void on_mouse(int event, int x, int y, int flags, void* userdata)
 {
   if ( event == EVENT_MOUSEMOVE )
@@ -140,6 +159,9 @@ void on_mouse(int event, int x, int y, int flags, void* userdata)
   }
 }
 
+/**
+ * Основная процедура
+ */
 int main( int argc, char** argv )
 {
   VideoCapture cap("resources/StarWars.avi");
